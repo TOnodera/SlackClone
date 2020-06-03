@@ -1,17 +1,12 @@
 <template>
   <div>
-    <h1>Firebaseを使った読み書き確認</h1>
-    <input v-model="message">
-    <button @click="addMessage">メッセージを追加</button>
-    <ul>
-      <li v-for='(message,index) in messages' :key="index">
-        {{message.content}} index: {{index}}
-        <span @click="deleteMessage(index)">X</span>
-      </li>
-    </ul>
+    <h1>Slack Clone</h1>
+    <p>ログイン中</p>
+    <div>
+      <button class="py-1 px-4 bg-gray-800 text-white rouded">サインアウト</button>
+    </div>
   </div>
 </template>
-
 <script>
 import firebase from 'firebase/app'
 import 'firebase/database'
