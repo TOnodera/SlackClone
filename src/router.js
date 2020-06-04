@@ -3,6 +3,8 @@ import Router from 'vue-router'
 import Home from './views/Home.vue'
 import SignIn from './views/SignIn.vue'
 import Register from './views/Register.vue'
+import firebase from 'firebase/app'
+import 'firebase/auth'
 
 Vue.use(Router)
 
@@ -13,7 +15,17 @@ export default new Router({
     {
       path: '/',
       name: 'home',
-      component: Home
+      component: Home,
+      beforeEnter: (to,from,next)=>{
+        firebase.auth().onAuthStateChanged(user=>{
+          if(user){
+            console.log(user)
+            next()
+          }else{
+            next('/signin')
+          }
+        })
+      }
     },
     {
       path: '/about',

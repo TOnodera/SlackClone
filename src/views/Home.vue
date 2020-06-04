@@ -3,7 +3,7 @@
     <h1>Slack Clone</h1>
     <p>ログイン中</p>
     <div>
-      <button class="py-1 px-4 bg-gray-800 text-white rouded">サインアウト</button>
+      <button class="py-1 px-4 bg-gray-800 text-white rouded" @click="signOut">サインアウト</button>
     </div>
   </div>
 </template>
@@ -39,6 +39,10 @@ export default {
         .ref('slack')
         .child(index)
         .remove()
+    },
+    signOut() {
+      firebase.auth().signOut()
+      this.$router.push('/signin')
     }
   }
 }
