@@ -32,7 +32,17 @@
                 placeholder="パスワード"
                 />
             </div>
-            <button type="submit" class="text-xl w-3/5 bg-green-800 text-white py-2 rounded">サインイン</button>
+            <div v-if="errors.length">
+                <ul class="my-4">
+                    <li
+                    v-for="(error,index) in errors"
+                    :key="index"
+                    class="font-semibold text-red-700">
+                    {{error}}
+                    </li>
+                </ul>
+            </div>
+            <button type="submit" class="text-xl w-3/5 bg-green-800 text-white py-2 rounded">ユーザーの登録</button>
             </form>
         </div>
         </div>
@@ -49,7 +59,8 @@ export default {
     data() {
         return {
             email: '',
-            password: ''
+            password: '',
+            errors:[]
         }
     },
     methods: {
@@ -58,10 +69,34 @@ export default {
                 .auth()
                 .createUserWithEmailAndPassword(this.email,this.password)
                 .then(response=>{
-                    console.log(response)
+                    const user = response.user;
+                    firebase
+                        .database()
+                        .ref('users')
+                        .child(user.uid)
+                        .set({
+                            user_id: user.uid,
+                            email: user.email
+                        })
+                        .then(()=>{
+                            this.$router.push('/')//登録に成功したらリダイレクト
+                        })
+                        .catch((error)=>{
+                            console.log(error)
+                        })
                 })
                 .catch(e=>{
-                    console.log(e)
+                    if(e.code=='auth/email-already-in-use'){
+                        const errMsg = '入力したメールアドレスは登録済です。'
+                        if(!this.errors.find((message=>message==errMsg))){
+                            this.errors.push(errMsg)
+                        }
+                    }else{
+                        const errMsg = '入力したメールアドレスかパスワードに問題があります。'
+                        if(!this.errors.find(message=>message==errMsg)){
+                            this.errors.push(errMsg)
+                        }
+                    }
                 })
         }
     }
