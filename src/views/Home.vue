@@ -10,14 +10,44 @@
          <span class="opacity-50">{{user.email}}</span>
       </div>
       <div class="mt-5 flex justify-between items-center">
-        <div class="font-bold opacity-50 text-lg">
-          <div
+        <div class="font-bold opacity-50 text-lg">チャンネル</div>
+        <!-- modal -->
+        <div
+          class="z-10 fixed top-0 left-0 h-full w-full flex items-center justify-center"
+          style="background-color:rgba(0,0,0,0.5)"
+          v-show="channelModal"
+          @click="closeChannelModal"
+        >
+          <div class="z-20 bg-white text-gray-900 w-1/3 rounded-md">
+            <div class="flex flex-col p-6">
+              <div class="flex justify-between items-center">
+                <h2 class="text-3xl font-black leading-loose">チャンネルを作成する</h2>
+                <span class="text-4xl">×</span>
+              </div>
+              <p>チャンネルはチームがコニュニケーションを取る場所です。特定のトピックに基づいてチャンネルを作ると良いでしょう。(例: #マーケティング)</p>
+              <div class="mt-8 font-semibold">名前</div>
+              <div class="my-3">
+                <input
+                  type="text"
+                  class="w-full rounded border-gray-900 border-solid border p-3"
+                />
+              </div>
+              <div class="flex justify-end">
+                <button
+                  class="px-8 py-2 rounded bg-green-900 font-bold text-white"
+                >作成</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <PlusCircle @click.native="showChannelModal"/>
+      </div>
+      <div
           class="opacity-50 mt-1"
           v-for="channel in channels"
-          :key="channel.id">#{{channel.channel_name}}</div>
-        </div>
-        <PlusCircle/>
-       </div>
+          :key="channel.id"
+        ># {{ channel.channel_name }}
+      </div>
        <div class="mt-5 flex justify-between items-center">
           <div class="font-bold opacity-50 text-lg">ダイレクトメッセージ</div>
           <PlusCircle />
@@ -51,11 +81,11 @@
       <main class=" overflow-y-scroll">
         <div class="h-full flex flex-col ml-6">
           <div class="flex-grow overflow-y-scroll">
-            <div class="mt-2 mb-4 flex">
-              <Avator :user="user.email" />
+            <div class="mt-2 mb-4 flex" v-for="message in messages" :key="message.key">
+              <Avator :user="message.user" />
               <div class="ml-2">
-                <div class="font-bold">{{ user.email }}</div>
-                <div>{{ message }}</div>
+                <div class="font-bold">{{ message.user }}</div>
+                <div>{{ message.content }}</div>
               </div>
             </div>
           </div>
@@ -76,6 +106,7 @@
   </div>
 </template>
 <script>
+
 import firebase from 'firebase/app'
 import 'firebase/database'
 
@@ -110,13 +141,26 @@ export default {
       message: '',
       messages: [],
       placeholder: '',
-      channels: [],
-      channel_id: ''
+      channels: [
+        {
+          id: 1,
+          channel_name: "営業"
+        },
+        {
+          id: 2,
+          channel_name: "マーケティング"
+        },
+        {
+          id: 3,
+          channel_name: "情シス"
+        }
+      ],
+      channel_id: '',
+      channelModal:false
     }
   },
   mounted () {
 
-    console.log(this.messages)
     this.user = firebase.auth().currentUser
 
     firebase
@@ -132,30 +176,45 @@ export default {
       .database()
       .ref('users')
       .off()
+
+    firebase
+      .database()
+      .ref('messages')
+      .child(this.channel_id)
+      .off()
   },
   methods:{
     signOut () {
       firebase.auth().signOut()
       this.$router.push('/signin')
     },
-    directMessage(email){
+    directMessage(user){
       this.messages = []
-      this.user.uid > user.user_id
-      ? (this.channel_id = this.user.uid + '-' + user.user_id)
-      : (this.channel_id = user.user_id + '-' + this.user.uid)
+
+      this.channel_id = this.user.uid > user.user_id ? this.user.uid + '-' + user.user_id : user.user_id + '-' + this.user.uid
 
       this.channel_name = this.user.email
-      this.placeholder = email + 'へのメッセージ'
+      this.placeholder = user.email + 'へのメッセージ'
 
+      if (this.channel_id != "") {
+        firebase
+          .database()
+          .ref("messages")
+          .child(this.channel_id)
+          .off();
+      }
+      
       firebase
-        .database()
-        .ref('messages')
-        .child(this.channel_id)
-        .on('child_added',snapshot=>{
-          this.messages.push(snapshot.val())
-        })
+      .database()
+      .ref('messages')
+      .child(this.channel_id)
+      .on('child_added',snapshot=>{
+        this.messages.push(snapshot.val())
+      })
+    
     },
     sendMessage(){
+      
       const newMessage = firebase
         .database()
         .ref('messages')
@@ -173,7 +232,14 @@ export default {
 
       this.message = ''
       
+    },
+    showChannelModal() {
+      this.channelModal = true
+    },
+    closeChannelModal() {
+      this.channelModal = false
     }
   }
 }
 </script>
+

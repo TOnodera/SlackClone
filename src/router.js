@@ -19,7 +19,6 @@ export default new Router({
       beforeEnter: (to,from,next)=>{
         firebase.auth().onAuthStateChanged(user=>{
           if(user){
-            console.log(user)
             next()
           }else{
             next('/signin')
