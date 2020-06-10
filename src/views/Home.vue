@@ -56,7 +56,9 @@
           <PlusCircle />
         </div>
         <div class="mt-2 flex items-center" v-for="user in users" :key="user.user_id">
-          <span class="bg-yellow-400 rounded-full w-3 h-3 mr-2"></span>
+          <span 
+          class=" rounded-full w-3 h-3 mr-2"
+          :class="[isOnline(user) ? 'bg-yellow-400':'bg-gray-600']"></span>
           <span class="opacity-50" @click="directMessage(user)">{{ user.email }}</span>
         </div>
     </div>
@@ -147,7 +149,9 @@ export default {
       channels: [],
       channel_id: '',
       channelModal: false,
-      channel: ''
+      channel: '',
+      connectionRef: firebase.database().ref('connections'),
+      connection_key:''
     }
   },
   mounted () {
@@ -157,7 +161,19 @@ export default {
       .database()
       .ref('users')
       .on('child_added', snapshot => {
-        this.users.push(snapshot.val())
+
+        firebase
+          .database()
+          .ref('users')
+          .on('child_added',snapshot=>{
+            let user = snapshot.val()
+            if(this.user.uid == user.user_id){
+              user.status = 'online'
+            }else{
+              user.status = 'offline'
+            }
+            this.users.push(user)
+          })
       })
 
     firebase
@@ -165,6 +181,21 @@ export default {
       .ref('channel')
       .on('child_added', (snapshot) => {
         this.channels.push(snapshot.val())
+      })
+
+    firebase
+      .database()
+      .ref('.info/connected')
+      .on('value',snapshot=>{
+        if(snapshot.val()===true){
+          let ref = this.connectionRef.push()
+          this.connection_key = ref.key
+          ref.onDisconnect().remove()//ログイン情報を自動削除
+          ref.set({
+            user_id:this.user.uid,
+            key:this.connection_key
+          })
+        }
       })
   },
   beforeDestroy () {
@@ -178,9 +209,15 @@ export default {
       .ref('messages')
       .child(this.channel_id)
       .off()
+
+    firebase
+      .database()
+      .ref('.info/connected')
+      .off()
   },
   methods: {
     signOut () {
+      this.connectionRef.child(this.connection_key).remove()
       firebase.auth().signOut()
       this.$router.push('/signin')
     },
@@ -271,6 +308,13 @@ export default {
         .on('child_added', (snapshot) => {
           this.messages.push(snapshot.val())
         })
+    },
+    isOnline(user){
+      if(user.status === 'online'){
+        return true
+      }else{
+        return false
+      }
     }
   }
 }
