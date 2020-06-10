@@ -16,11 +16,11 @@ export default new Router({
       path: '/',
       name: 'home',
       component: Home,
-      beforeEnter: (to,from,next)=>{
-        firebase.auth().onAuthStateChanged(user=>{
-          if(user){
+      beforeEnter: (to, from, next) => {
+        firebase.auth().onAuthStateChanged(user => {
+          if (user) {
             next()
-          }else{
+          } else {
             next('/signin')
           }
         })

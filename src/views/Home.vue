@@ -94,7 +94,7 @@
           </div>
           <div class="border border-gray-900 rounded mb-4">
             <textarea
-            class="w-full pt-4 pl-8 outline-none" 
+            class="w-full pt-4 pl-8 outline-none"
             :placeholder="placeholder"
             v-model="message"></textarea>
             <div class="bg-gray-100 p-2">
@@ -125,7 +125,7 @@ import Avator from '../components/Avator.vue'
 
 export default {
   name: 'Home',
-  components:{
+  components: {
     Notification,
     PlusCircle,
     Search,
@@ -136,7 +136,7 @@ export default {
     AtSymbol,
     Avator
   },
-  data() {
+  data () {
     return {
       user: '',
       users: [],
@@ -151,25 +151,23 @@ export default {
     }
   },
   mounted () {
-
     this.user = firebase.auth().currentUser
 
     firebase
       .database()
       .ref('users')
-      .on('child_added',snapshot=>{
+      .on('child_added', snapshot => {
         this.users.push(snapshot.val())
       })
-    
+
     firebase
       .database()
       .ref('channel')
-      .on('child_added',(snapshot)=>{
+      .on('child_added', (snapshot) => {
         this.channels.push(snapshot.val())
       })
-    
   },
-  beforeDestroy(){
+  beforeDestroy () {
     firebase
       .database()
       .ref('users')
@@ -181,12 +179,12 @@ export default {
       .child(this.channel_id)
       .off()
   },
-  methods:{
+  methods: {
     signOut () {
       firebase.auth().signOut()
       this.$router.push('/signin')
     },
-    directMessage(user){
+    directMessage (user) {
       this.messages = []
 
       this.channel_id = this.user.uid > user.user_id ? this.user.uid + '-' + user.user_id : user.user_id + '-' + this.user.uid
@@ -194,77 +192,7 @@ export default {
       this.channel_name = this.user.email
       this.placeholder = user.email + 'へのメッセージ'
 
-      if (this.channel_id != "") {
-        firebase
-          .database()
-          .ref("messages")
-          .child(this.channel_id)
-          .off();
-      }
-      
-      firebase
-      .database()
-      .ref('messages')
-      .child(this.channel_id)
-      .on('child_added',snapshot=>{
-        this.messages.push(snapshot.val())
-      })
-    
-    },
-    sendMessage(){
-      
-      const newMessage = firebase
-        .database()
-        .ref('messages')
-        .child(this.channel_id)
-        .push()
-
-      const key_id = newMessage.key
-
-      newMessage.set({
-        key:key_id,
-        content:this.message,
-        user:this.user.email,
-        createdAt:firebase.database.ServerValue.TIMESTAMP
-      })
-
-      this.message = ''
-      
-    },
-    showChannelModal() {
-      this.channelModal = true
-    },
-    closeChannelModal() {
-      this.channelModal = false
-    },
-    addChannel() {
-
-      const newChannel = firebase
-            .database()
-            .ref('channel')
-            .push()
-
-      const key_id = newChannel.key
-
-      newChannel
-        .set({
-          channel_name: this.channel,
-          id: key_id
-        })
-        .then(()=>{
-          this.channelModal = false
-        })
-
-      this.channel = ''
-
-    },
-    channelMessage(channel) {
-
-      this.messages = []
-      this.channel_name = '# ' + channel.channel_name
-      this.channel_id = channel.id
-
-      if(this.channel_id!=''){
+      if (this.channel_id != '') {
         firebase
           .database()
           .ref('messages')
@@ -276,12 +204,74 @@ export default {
         .database()
         .ref('messages')
         .child(this.channel_id)
-        .on('child_added',(snapshot)=>{
+        .on('child_added', snapshot => {
           this.messages.push(snapshot.val())
         })
+    },
+    sendMessage () {
+      const newMessage = firebase
+        .database()
+        .ref('messages')
+        .child(this.channel_id)
+        .push()
 
+      const key_id = newMessage.key
+
+      newMessage.set({
+        key: key_id,
+        content: this.message,
+        user: this.user.email,
+        createdAt: firebase.database.ServerValue.TIMESTAMP
+      })
+
+      this.message = ''
+    },
+    showChannelModal () {
+      this.channelModal = true
+    },
+    closeChannelModal () {
+      this.channelModal = false
+    },
+    addChannel () {
+      const newChannel = firebase
+        .database()
+        .ref('channel')
+        .push()
+
+      const key_id = newChannel.key
+
+      newChannel
+        .set({
+          channel_name: this.channel,
+          id: key_id
+        })
+        .then(() => {
+          this.channelModal = false
+        })
+
+      this.channel = ''
+    },
+    channelMessage (channel) {
+      this.messages = []
+      this.channel_name = '# ' + channel.channel_name
+      this.channel_id = channel.id
+
+      if (this.channel_id != '') {
+        firebase
+          .database()
+          .ref('messages')
+          .child(this.channel_id)
+          .off()
+      }
+
+      firebase
+        .database()
+        .ref('messages')
+        .child(this.channel_id)
+        .on('child_added', (snapshot) => {
+          this.messages.push(snapshot.val())
+        })
     }
   }
 }
 </script>
-

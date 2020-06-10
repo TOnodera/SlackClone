@@ -56,49 +56,49 @@ import firebase from 'firebase/app'
 import 'firebase/auth'
 
 export default {
-    data() {
-        return {
-            email: '',
-            password: '',
-            errors:[]
-        }
-    },
-    methods: {
-        registerUser () {
-            firebase
-                .auth()
-                .createUserWithEmailAndPassword(this.email,this.password)
-                .then(response=>{
-                    const user = response.user;
-                    firebase
-                        .database()
-                        .ref('users')
-                        .child(user.uid)
-                        .set({
-                            user_id: user.uid,
-                            email: user.email
-                        })
-                        .then(()=>{
-                            this.$router.push('/')//登録に成功したらリダイレクト
-                        })
-                        .catch((error)=>{
-                            console.log(error)
-                        })
-                })
-                .catch(e=>{
-                    if(e.code=='auth/email-already-in-use'){
-                        const errMsg = '入力したメールアドレスは登録済です。'
-                        if(!this.errors.find((message=>message==errMsg))){
-                            this.errors.push(errMsg)
-                        }
-                    }else{
-                        const errMsg = '入力したメールアドレスかパスワードに問題があります。'
-                        if(!this.errors.find(message=>message==errMsg)){
-                            this.errors.push(errMsg)
-                        }
-                    }
-                })
-        }
+  data () {
+    return {
+      email: '',
+      password: '',
+      errors: []
     }
+  },
+  methods: {
+    registerUser () {
+      firebase
+        .auth()
+        .createUserWithEmailAndPassword(this.email, this.password)
+        .then(response => {
+          const user = response.user
+          firebase
+            .database()
+            .ref('users')
+            .child(user.uid)
+            .set({
+              user_id: user.uid,
+              email: user.email
+            })
+            .then(() => {
+              this.$router.push('/')// 登録に成功したらリダイレクト
+            })
+            .catch((error) => {
+              console.log(error)
+            })
+        })
+        .catch(e => {
+          if (e.code == 'auth/email-already-in-use') {
+            const errMsg = '入力したメールアドレスは登録済です。'
+            if (!this.errors.find(message => message == errMsg)) {
+              this.errors.push(errMsg)
+            }
+          } else {
+            const errMsg = '入力したメールアドレスかパスワードに問題があります。'
+            if (!this.errors.find(message => message == errMsg)) {
+              this.errors.push(errMsg)
+            }
+          }
+        })
+    }
+  }
 }
 </script>

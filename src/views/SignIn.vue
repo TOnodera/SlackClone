@@ -42,25 +42,25 @@
 </template>
 <script>
 import firebase from 'firebase/app'
-import "firebase/auth"
+import 'firebase/auth'
 
 export default {
-  data() {
+  data () {
     return {
       email: '',
       password: ''
     }
   },
   methods: {
-    signIn() {
+    signIn () {
       firebase
         .auth()
-        .signInWithEmailAndPassword(this.email,this.password)
-        .then(response=>{
+        .signInWithEmailAndPassword(this.email, this.password)
+        .then(response => {
           console.log(response)
           this.$router.push('/')
         })
-        .catch(e=>{
+        .catch(e => {
           console.log(e)
         })
     }
