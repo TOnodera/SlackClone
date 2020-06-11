@@ -151,12 +151,14 @@ export default {
       channelModal: false,
       channel: '',
       connectionRef: firebase.database().ref('connections'),
-      connection_key:''
+      connection_key:'',
+      connections: []
     }
   },
   mounted () {
     this.user = firebase.auth().currentUser
 
+    //ユーザー情報を追加
     firebase
       .database()
       .ref('users')
@@ -171,6 +173,7 @@ export default {
             this.users.push(user)
       })
 
+    //チャンネルを追加
     firebase
       .database()
       .ref('channel')
@@ -178,6 +181,7 @@ export default {
         this.channels.push(snapshot.val())
       })
 
+    //ログイン状態の管理
     firebase
       .database()
       .ref('.info/connected')
@@ -192,6 +196,46 @@ export default {
           })
         }
       })
+
+      //新たにログインした場合の処理
+      firebase
+        .database()
+        .ref('connections')
+        .on('child_added',snapshot=>{
+          let new_connection = snapshot.val()
+          this.connections.push(new_connection)
+          //this.usersに存在するか確認
+          let user = this.users.find(user=>{user.user_id===new_connection.user_id})
+          if(user!=undefined){
+            user.status="online"
+          }
+        })
+
+        //ログアウトした場合の処理
+        firebase
+          .database()
+          .ref('connections')
+          .on('child_removed',snapshot=>{
+
+            //ブラウザなどを閉じた場合に処理
+            let remove_connection = snapshot.val()
+            this.connections = this.connections.filter(
+              connection=>connection.key !== remove_connection.key
+            )
+
+            //-1以外の場合は完全に閉じているわけではない（別のタブや別ブラウザで接続の可能性）ので検索
+            let index = this.connections.findIndex(connection=>{
+              connection.user_id === remove_connection.user_id
+            })
+
+            //-1の場合はoffline
+            if(index===-1){
+              let user = this.status.find(
+                user=>user.user_id === remove_connection.user_id
+              )
+              user.status = "offline"
+            }
+          })
   },
   beforeDestroy () {
     firebase
