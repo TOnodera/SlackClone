@@ -162,18 +162,13 @@ export default {
       .ref('users')
       .on('child_added', snapshot => {
 
-        firebase
-          .database()
-          .ref('users')
-          .on('child_added',snapshot=>{
-            let user = snapshot.val()
+        let user = snapshot.val()
             if(this.user.uid == user.user_id){
               user.status = 'online'
             }else{
               user.status = 'offline'
             }
             this.users.push(user)
-          })
       })
 
     firebase
